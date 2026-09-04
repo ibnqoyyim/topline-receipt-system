@@ -1,0 +1,44 @@
+{
+  "name": "topline-receipt-system",
+  "version": "1.0.0",
+  "description": "Fully offline Windows POS and receipt system for Topline Stores",
+  "main": "./out/main/index.js",
+  "author": "Topline Stores",
+  "homepage": "https://topline.local",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite preview",
+    "build": "electron-vite build",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "postinstall": "electron-builder install-app-deps",
+    "build:win": "npm run build && electron-builder --win",
+    "build:unpack": "npm run build && electron-builder --dir"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.2"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.18.1",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "electron": "^37.4.0",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^4.0.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}
