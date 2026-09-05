@@ -10,6 +10,23 @@ const MIGRATIONS: Migration[] = [
   {
     name: '001_initial_schema',
     sql: INITIAL_SCHEMA_SQL
+  },
+  {
+    name: '002_receipt_adjustments',
+    sql: `
+CREATE TABLE IF NOT EXISTS receipt_adjustments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  receipt_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  before_json TEXT NOT NULL,
+  after_json TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (receipt_id) REFERENCES receipts(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_receipt_adjustments_receipt ON receipt_adjustments(receipt_id);
+`
   }
 ]
 

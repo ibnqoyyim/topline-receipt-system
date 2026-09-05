@@ -11,6 +11,9 @@ export function ReceiptHistoryPage(): React.JSX.Element {
   const [toDate, setToDate] = useState('')
   const [status, setStatus] = useState<'all' | 'active' | 'voided'>('all')
 
+  const [printingId, setPrintingId] = useState<number | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
   async function load(): Promise<void> {
     const list = await window.api.listReceipts({
       query,
@@ -25,10 +28,19 @@ export function ReceiptHistoryPage(): React.JSX.Element {
     void load()
   }, [])
 
+  async function printRow(id: number): Promise<void> {
+    setPrintingId(id)
+    setNotice(null)
+    const result = await window.api.printReceipt(id)
+    setPrintingId(null)
+    setNotice(result.ok ? 'Print dialog opened for that receipt.' : result.error)
+  }
+
   return (
     <div className="px-8 py-8">
       <h1 className="text-2xl font-bold text-navy">Receipt History</h1>
-      <p className="text-sm text-navy/70">Search, filter, and reprint past receipts.</p>
+      <p className="text-sm text-navy/70">Search, filter, and print past receipts.</p>
+      {notice ? <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-950">{notice}</p> : null}
 
       <div className="mt-4 flex flex-wrap gap-3">
         <input
@@ -60,6 +72,7 @@ export function ReceiptHistoryPage(): React.JSX.Element {
               <th className="px-4 py-3">Method</th>
               <th className="px-4 py-3 text-right">Total</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -76,11 +89,24 @@ export function ReceiptHistoryPage(): React.JSX.Element {
                 <td className="px-4 py-2">{paymentMethodLabel(row.paymentMethod)}</td>
                 <td className="px-4 py-2 text-right">{formatNaira(row.totalKobo)}</td>
                 <td className="px-4 py-2 uppercase">{row.status}</td>
+                <td className="px-4 py-2 text-right">
+                  <Link to={`/receipts/preview/${row.id}`} className="mr-3 text-navy-mid">
+                    Preview
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={printingId === row.id}
+                    onClick={() => void printRow(row.id)}
+                    className="font-semibold text-gold-dark disabled:opacity-50"
+                  >
+                    {printingId === row.id ? 'Printing…' : 'Print'}
+                  </button>
+                </td>
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-navy/50">
+                <td colSpan={8} className="px-4 py-8 text-center text-navy/50">
                   No receipts yet.
                 </td>
               </tr>

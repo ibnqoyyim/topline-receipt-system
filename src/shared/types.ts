@@ -127,6 +127,13 @@ export interface ReceiptSummary {
   balanceAfterKobo: number
 }
 
+export interface ReceiptAdjustment {
+  id: number
+  username: string
+  reason: string
+  createdAt: string
+}
+
 export interface ReceiptDetail extends ReceiptSummary {
   branch: BranchInfo
   subtotalKobo: number
@@ -135,6 +142,12 @@ export interface ReceiptDetail extends ReceiptSummary {
   balanceBeforeKobo: number
   notes: string
   items: ReceiptItemRecord[]
+  adjusted: boolean
+  adjustments: ReceiptAdjustment[]
+}
+
+export interface AdjustReceiptInput extends SaveReceiptInput {
+  reason: string
 }
 
 export interface PaymentRecord {
@@ -187,6 +200,7 @@ export interface PaymentBreakdownRow {
 export interface ReportsData {
   fromDate: string
   toDate: string
+  ownShiftOnly: boolean
   sales: SalesReportRow[]
   salesTotalKobo: number
   outstanding: Array<{ id: number; name: string; phone: string; balanceKobo: number }>

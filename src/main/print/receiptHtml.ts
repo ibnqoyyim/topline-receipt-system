@@ -90,7 +90,7 @@ export function buildReceiptHtml(receipt: ReceiptDetail, width: '58mm' | '80mm')
       <div class="row bold"><span>${escapeHtml(paymentMethodLabel(receipt.paymentMethod))}</span><span>${formatNaira(receipt.amountPaidKobo)}</span></div>
     </div>
     <div class="meta">
-      <div><span class="bold">RECEIPT#</span> &nbsp; ${escapeHtml(receipt.receiptNumber)}</div>
+      <div><span class="bold">RECEIPT#</span> &nbsp; ${escapeHtml(receipt.receiptNumber)}${receipt.adjusted ? ' (ADJUSTED)' : ''}</div>
       <div><span class="bold">DATE</span> &nbsp; ${escapeHtml(formatReceiptDate(receipt.receiptDate))}</div>
       <div class="bold" style="margin-top:2mm">CUSTOMER: ${escapeHtml(receipt.customerName)}</div>
       <div style="margin-top:2mm">OUTSTANDING:</div>

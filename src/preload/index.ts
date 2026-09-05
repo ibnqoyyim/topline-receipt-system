@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type {
+  AdjustReceiptInput,
   AppContext,
   AuditRow,
   ChangePasswordResult,
@@ -64,9 +65,15 @@ const api = {
     id: number
   ): Promise<Result<{ customer: CustomerRecord; receipts: ReceiptSummary[]; payments: PaymentRecord[] }>> =>
     ipcRenderer.invoke('customers:history', id),
+  printCustomerStatement: (id: number): Promise<Result<true>> =>
+    ipcRenderer.invoke('customers:printStatement', id),
+  exportCustomerStatementPdf: (id: number): Promise<Result<string>> =>
+    ipcRenderer.invoke('customers:statementPdf', id),
 
   saveReceipt: (input: SaveReceiptInput): Promise<Result<ReceiptDetail>> =>
     ipcRenderer.invoke('receipts:save', input),
+  adjustReceipt: (id: number, input: AdjustReceiptInput): Promise<Result<ReceiptDetail>> =>
+    ipcRenderer.invoke('receipts:adjust', { id, ...input }),
   getReceipt: (id: number): Promise<Result<ReceiptDetail>> => ipcRenderer.invoke('receipts:get', id),
   listReceipts: (filters?: {
     query?: string
@@ -78,6 +85,7 @@ const api = {
   voidReceipt: (id: number): Promise<Result<ReceiptDetail>> => ipcRenderer.invoke('receipts:void', id),
   printReceipt: (id: number): Promise<Result<true>> => ipcRenderer.invoke('receipts:print', id),
   exportReceiptPdf: (id: number): Promise<Result<string>> => ipcRenderer.invoke('receipts:pdf', id),
+  printTestPage: (): Promise<Result<true>> => ipcRenderer.invoke('receipts:printTest'),
 
   listPayments: (filters?: { query?: string; fromDate?: string; toDate?: string }): Promise<PaymentRecord[]> =>
     ipcRenderer.invoke('payments:list', filters),
@@ -90,6 +98,10 @@ const api = {
 
   getReports: (range: { fromDate: string; toDate: string }): Promise<ReportsData> =>
     ipcRenderer.invoke('reports:get', range),
+  exportReportsPdf: (range: { fromDate: string; toDate: string }): Promise<Result<string>> =>
+    ipcRenderer.invoke('reports:pdf', range),
+  printReports: (range: { fromDate: string; toDate: string }): Promise<Result<true>> =>
+    ipcRenderer.invoke('reports:print', range),
 
   getSettings: (): Promise<SettingsPayload> => ipcRenderer.invoke('settings:get'),
   saveSettings: (input: {

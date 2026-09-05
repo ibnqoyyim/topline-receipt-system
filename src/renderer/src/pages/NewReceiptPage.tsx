@@ -1,8 +1,8 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { PAYMENT_METHODS } from '@shared/format'
 import { formatNaira, formatOutstanding, koboToNairaGrouped, percentOfKobo, tryNairaToKobo } from '@shared/money'
-import type { AppSettings, CustomerRecord, PaymentMethod, ProductRecord } from '@shared/types'
+import type { AppSettings, CustomerRecord, PaymentMethod, ProductRecord, ReceiptDetail } from '@shared/types'
 
 interface DraftLine {
   key: string
@@ -17,9 +17,12 @@ const inputClass =
 
 export function NewReceiptPage(): React.JSX.Element {
   const navigate = useNavigate()
+  const { id: adjustId } = useParams()
+  const isAdjust = Boolean(adjustId)
   const [products, setProducts] = useState<ProductRecord[]>([])
   const [customers, setCustomers] = useState<CustomerRecord[]>([])
   const [settings, setSettings] = useState<AppSettings | null>(null)
+  const [existing, setExisting] = useState<ReceiptDetail | null>(null)
   const [productQuery, setProductQuery] = useState('')
   const [lines, setLines] = useState<DraftLine[]>([])
   const [customerId, setCustomerId] = useState<number | 0>(0)
@@ -27,9 +30,11 @@ export function NewReceiptPage(): React.JSX.Element {
   const [amountPaid, setAmountPaid] = useState('')
   const [discount, setDiscount] = useState('0')
   const [notes, setNotes] = useState('')
+  const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [showCustomerForm, setShowCustomerForm] = useState(false)
+  const printAfterSave = useRef(false)
 
   useEffect(() => {
     void Promise.all([
@@ -42,6 +47,35 @@ export function NewReceiptPage(): React.JSX.Element {
       setSettings(context.settings)
     })
   }, [])
+
+  useEffect(() => {
+    if (!adjustId) {
+      setExisting(null)
+      return
+    }
+    void window.api.getReceipt(Number(adjustId)).then((result) => {
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      const receipt = result.data
+      setExisting(receipt)
+      setLines(
+        receipt.items.map((item) => ({
+          key: `existing-${item.id}`,
+          productId: item.productId,
+          description: item.description,
+          qty: String(item.qty),
+          unitPrice: koboToNairaGrouped(item.unitPriceKobo).replace(/,/g, '')
+        }))
+      )
+      setCustomerId(receipt.customerId ?? 0)
+      setPaymentMethod(receipt.paymentMethod)
+      setAmountPaid(koboToNairaGrouped(receipt.amountPaidKobo).replace(/,/g, ''))
+      setDiscount(koboToNairaGrouped(receipt.discountKobo).replace(/,/g, ''))
+      setNotes(receipt.notes)
+    })
+  }, [adjustId])
 
   const computedLines = useMemo(() => {
     return lines.map((line) => {
@@ -61,9 +95,17 @@ export function NewReceiptPage(): React.JSX.Element {
   const paidParsed = tryNairaToKobo(amountPaid)
   const amountPaidKobo = paidParsed.ok ? paidParsed.kobo : 0
   const selectedCustomer = customers.find((customer) => customer.id === customerId)
-  const balanceBefore = selectedCustomer?.currentBalanceKobo ?? 0
+  const oldNewDebt = existing ? existing.totalKobo - existing.amountPaidKobo : 0
+  const liveBalance = selectedCustomer?.currentBalanceKobo ?? 0
+  const balanceBefore = existing
+    ? selectedCustomer
+      ? selectedCustomer.id === existing.customerId
+        ? liveBalance - oldNewDebt
+        : liveBalance
+      : 0
+    : liveBalance
   const newDebt = total - amountPaidKobo
-  const balanceAfter = balanceBefore + newDebt
+  const balanceAfter = customerId === 0 ? 0 : balanceBefore + newDebt
 
   const suggestions = products
     .filter((product) => product.name.toLowerCase().includes(productQuery.trim().toLowerCase()))
@@ -122,21 +164,28 @@ export function NewReceiptPage(): React.JSX.Element {
       setError(paidParsed.error)
       return
     }
+    if (isAdjust && !reason.trim()) {
+      setError('Enter a reason for this adjustment.')
+      return
+    }
     setBusy(true)
-    const result = await window.api.saveReceipt({
+    const payload = {
       customerId: customerId === 0 ? null : customerId,
       paymentMethod,
       amountPaidKobo,
       discountKobo,
       notes,
       items
-    })
+    }
+    const result = isAdjust && adjustId
+      ? await window.api.adjustReceipt(Number(adjustId), { ...payload, reason })
+      : await window.api.saveReceipt(payload)
     setBusy(false)
     if (!result.ok) {
       setError(result.error)
       return
     }
-    navigate(`/receipts/preview/${result.data.id}`)
+    navigate(`/receipts/preview/${result.data.id}${printAfterSave.current ? '?print=1' : ''}`)
   }
 
   function fillPaidTotal(): void {
@@ -147,16 +196,37 @@ export function NewReceiptPage(): React.JSX.Element {
     <form onSubmit={(event) => void onSave(event)} className="mx-auto max-w-6xl px-8 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy">New Receipt</h1>
-          <p className="text-sm text-navy/70">Add lines, choose a customer, take payment, then save.</p>
+          <h1 className="text-2xl font-bold text-navy">
+            {isAdjust ? `Adjust ${existing?.receiptNumber ?? 'receipt'}` : 'New Receipt'}
+          </h1>
+          <p className="text-sm text-navy/70">
+            {isAdjust
+              ? 'Changes are saved as an adjustment. The original snapshot is kept in the audit trail.'
+              : 'Add lines, choose a customer, take payment, then save.'}
+          </p>
         </div>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-mid disabled:opacity-60"
-        >
-          {busy ? 'Saving…' : 'Save receipt'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={busy}
+            onClick={() => {
+              printAfterSave.current = false
+            }}
+            className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy-mid disabled:opacity-60"
+          >
+            {busy ? 'Saving…' : isAdjust ? 'Save adjustment' : 'Save receipt'}
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            onClick={() => {
+              printAfterSave.current = true
+            }}
+            className="rounded-md bg-gold px-4 py-2 text-sm font-bold text-navy-dark hover:bg-gold-dark disabled:opacity-60"
+          >
+            {isAdjust ? 'Save and reprint' : 'Save and print'}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_0.9fr]">
@@ -321,6 +391,12 @@ export function NewReceiptPage(): React.JSX.Element {
               Notes
               <input value={notes} onChange={(event) => setNotes(event.target.value)} className={inputClass} />
             </label>
+            {isAdjust ? (
+              <label className="mt-3 block text-sm">
+                Adjustment reason
+                <input value={reason} onChange={(event) => setReason(event.target.value)} className={inputClass} />
+              </label>
+            ) : null}
           </section>
 
           <section className="rounded-xl border border-navy/10 bg-white p-5 text-sm shadow-sm">

@@ -1,18 +1,20 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { canVoidReceipt } from '@shared/permissions'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { canAdjustReceipt, canVoidReceipt } from '@shared/permissions'
 import type { AppSettings, ReceiptDetail } from '@shared/types'
 import { ReceiptTicket } from '../components/ReceiptTicket'
 import { useAuth } from '../context/AuthContext'
 
 export function ReceiptPreviewPage(): React.JSX.Element {
   const { id } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { user } = useAuth()
   const [receipt, setReceipt] = useState<ReceiptDetail | null>(null)
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const autoPrinted = useRef(false)
 
   useEffect(() => {
     void window.api.getAppContext().then((context) => setSettings(context.settings))
@@ -34,13 +36,21 @@ export function ReceiptPreviewPage(): React.JSX.Element {
     })
   }, [id])
 
-  async function print(): Promise<void> {
+  async function printReceipt(): Promise<void> {
     if (!receipt) return
     setBusy(true)
+    setNotice('Opening print dialog…')
     const result = await window.api.printReceipt(receipt.id)
     setBusy(false)
-    setNotice(result.ok ? 'Sent to printer.' : result.error)
+    setNotice(result.ok ? 'Print sent. If nothing printed, choose a printer in Settings and try again.' : result.error)
   }
+
+  useEffect(() => {
+    if (!receipt || searchParams.get('print') !== '1' || autoPrinted.current) return
+    autoPrinted.current = true
+    setSearchParams({}, { replace: true })
+    void printReceipt()
+  }, [receipt, searchParams, setSearchParams])
 
   async function pdf(): Promise<void> {
     if (!receipt) return
@@ -94,16 +104,17 @@ export function ReceiptPreviewPage(): React.JSX.Element {
           <h1 className="text-2xl font-bold text-navy">Receipt Preview</h1>
           <p className="text-sm text-navy/70">
             {receipt.receiptNumber} · {settings.printerWidth} thermal layout
+            {receipt.adjusted ? ' · Adjusted' : ''}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             disabled={busy}
-            onClick={() => void print()}
-            className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white"
+            onClick={() => void printReceipt()}
+            className="rounded-md bg-gold px-5 py-2.5 text-sm font-bold text-navy-dark hover:bg-gold-dark disabled:opacity-60"
           >
-            Print
+            {busy ? 'Printing…' : 'Print Receipt'}
           </button>
           <button
             type="button"
@@ -113,6 +124,14 @@ export function ReceiptPreviewPage(): React.JSX.Element {
           >
             Export PDF
           </button>
+          {user && canAdjustReceipt(user.role) && receipt.status === 'active' ? (
+            <Link
+              to={`/receipts/adjust/${receipt.id}`}
+              className="rounded-md border border-navy/20 px-4 py-2 text-sm font-semibold text-navy"
+            >
+              Adjust
+            </Link>
+          ) : null}
           {user && canVoidReceipt(user.role) && receipt.status === 'active' ? (
             <button
               type="button"
@@ -126,6 +145,18 @@ export function ReceiptPreviewPage(): React.JSX.Element {
         </div>
       </div>
       {notice ? <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-950">{notice}</p> : null}
+      {receipt.adjustments.length > 0 ? (
+        <div className="mb-4 rounded-md border border-navy/10 bg-white px-4 py-3 text-sm">
+          <p className="font-semibold text-navy">Adjustment history</p>
+          <ul className="mt-2 space-y-1 text-navy/80">
+            {receipt.adjustments.map((row) => (
+              <li key={row.id}>
+                {row.createdAt} · {row.username}: {row.reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <div className="overflow-x-auto rounded-xl bg-[#d8d2c8] p-8">
         <ReceiptTicket receipt={receipt} width={settings.printerWidth} />
       </div>

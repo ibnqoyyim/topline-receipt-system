@@ -133,6 +133,14 @@ export function registerCustomerHandlers(): void {
       _event,
       customerId: number
     ): Result<{ customer: CustomerRecord; receipts: ReceiptSummary[]; payments: PaymentRecord[] }> => {
+      return loadCustomerHistory(customerId)
+    }
+  )
+}
+
+export function loadCustomerHistory(
+  customerId: number
+): Result<{ customer: CustomerRecord; receipts: ReceiptSummary[]; payments: PaymentRecord[] }> {
       const user = requireSession()
       const row = getDb()
         .prepare('SELECT * FROM customers WHERE id = ? AND branch_id = ?')
@@ -221,6 +229,4 @@ export function registerCustomerHandlers(): void {
           }))
         }
       }
-    }
-  )
 }

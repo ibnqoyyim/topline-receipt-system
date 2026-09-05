@@ -73,6 +73,11 @@ export function SettingsPage(): React.JSX.Element {
     setMessage(result.ok ? `Backup saved to ${result.data}` : result.error)
   }
 
+  async function printTest(): Promise<void> {
+    const result = await window.api.printTestPage()
+    setMessage(result.ok ? 'Print dialog opened for the test page. This does not use a receipt number.' : result.error)
+  }
+
   async function restore(): Promise<void> {
     const result = await window.api.restoreDatabase()
     setMessage(result.ok ? `Restored from ${result.data}. Sign in again if needed.` : result.error)
@@ -138,8 +143,7 @@ export function SettingsPage(): React.JSX.Element {
         <section className="rounded-xl border border-amber-200 bg-amber-50 p-5">
           <h2 className="text-sm font-bold uppercase tracking-wide text-amber-900">Receipt numbering</h2>
           <p className="mt-2 text-sm text-amber-950">
-            Paper receipts are already at #SA0000006781. Set next number to <span className="font-semibold">6782</span> to
-            continue that series, or leave 1 for a fresh digital start. Next will print as{' '}
+            Digital receipts continue the paper book after #SA0000006781. Next will print as{' '}
             <span className="font-semibold">{previewNumber}</span>.
           </p>
           <div className="mt-3 grid grid-cols-2 gap-3">
@@ -196,6 +200,13 @@ export function SettingsPage(): React.JSX.Element {
               </select>
             </label>
           </div>
+          <button
+            type="button"
+            onClick={() => void printTest()}
+            className="mt-3 rounded-md bg-gold px-4 py-2 text-sm font-semibold text-navy-dark"
+          >
+            Print test page
+          </button>
           <label className="mt-3 flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -336,7 +347,10 @@ export function SettingsPage(): React.JSX.Element {
 
       <section className="mt-6 rounded-xl border border-navy/10 bg-white p-5">
         <h2 className="text-sm font-bold uppercase tracking-wide text-gold-dark">Backup &amp; restore</h2>
-        <p className="mt-2 text-sm text-navy/70">Copies the single SQLite file. Restore replaces the current file after confirmation.</p>
+        <p className="mt-2 text-sm text-navy/70">
+          Backup now copies the database to the <span className="font-semibold">Topline Backups</span> folder on the
+          Desktop. Restore replaces the current file after confirmation.
+        </p>
         <div className="mt-3 flex gap-2">
           <button type="button" onClick={() => void backup()} className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white">
             Backup now

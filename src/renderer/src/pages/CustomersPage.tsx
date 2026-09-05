@@ -129,13 +129,35 @@ export function CustomersPage(): React.JSX.Element {
 
       {history ? (
         <div className="mt-6 rounded-xl border border-navy/10 bg-white p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-bold text-navy">
               {history.customer.name} · {formatOutstanding(history.customer.currentBalanceKobo)}
             </h2>
-            <button type="button" onClick={() => setHistoryId(null)} className="text-sm">
-              Close
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void window.api.printCustomerStatement(history.customer.id).then((result) => {
+                  setError(result.ok ? null : result.error)
+                })}
+                className="rounded-md bg-gold px-3 py-1.5 text-sm font-semibold text-navy-dark"
+              >
+                Print statement
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  void window.api.exportCustomerStatementPdf(history.customer.id).then((result) => {
+                    setError(result.ok ? null : result.error)
+                  })
+                }
+                className="rounded-md border border-navy/20 px-3 py-1.5 text-sm font-semibold"
+              >
+                Statement PDF
+              </button>
+              <button type="button" onClick={() => setHistoryId(null)} className="text-sm">
+                Close
+              </button>
+            </div>
           </div>
           <h3 className="mt-4 text-xs font-bold uppercase text-navy/50">Receipts</h3>
           <ul className="mt-2 text-sm">

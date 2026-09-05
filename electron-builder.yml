@@ -2,6 +2,7 @@ appId: com.topline.receiptsystem
 productName: Topline Receipt System
 directories:
   buildResources: build
+  output: ../Topline Installer
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -15,9 +16,12 @@ asarUnpack:
 win:
   executableName: Topline Receipt System
   icon: build/icon.png
+  signAndEditExecutable: false
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
-npmRebuild: false
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+npmRebuild: true

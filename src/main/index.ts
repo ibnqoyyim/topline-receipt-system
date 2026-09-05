@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { ensureFirstBackup } from './backup'
 import { closeDatabase, initDatabase } from './db'
 import { registerIpcHandlers } from './ipc'
 import { setMainWindow } from './window'
@@ -48,6 +49,7 @@ function createWindow(): void {
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.topline.receiptsystem')
   initDatabase()
+  ensureFirstBackup()
   registerIpcHandlers()
 
   app.on('browser-window-created', (_, window) => {

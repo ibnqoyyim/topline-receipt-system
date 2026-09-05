@@ -13,6 +13,7 @@ import { CustomersPage } from './pages/CustomersPage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 export default function App(): React.JSX.Element {
   return (
@@ -26,6 +27,8 @@ export default function App(): React.JSX.Element {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/receipts/new" element={<NewReceiptPage />} />
+              <Route path="/receipts/adjust/:id" element={<NewReceiptPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/receipts/preview/:id" element={<ReceiptPreviewPage />} />
               <Route path="/receipts/preview" element={<ReceiptPreviewPage />} />
               <Route path="/receipts" element={<ReceiptHistoryPage />} />

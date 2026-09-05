@@ -1,7 +1,15 @@
 import bcrypt from 'bcryptjs'
 import { ipcMain } from 'electron'
 import { getDb, getDbPath } from '../db'
-import { printReceipt, exportReceiptPdf } from '../print'
+import {
+  printReceipt,
+  exportReceiptPdf,
+  printTestPage,
+  printCustomerStatement,
+  exportCustomerStatementPdf,
+  exportReportsPdf,
+  printReports
+} from '../print'
 import type { AppContext, ChangePasswordResult, LoginResult } from '../../shared/types'
 import { registerCustomerHandlers } from './customers'
 import { registerPaymentHandlers } from './payments'
@@ -113,6 +121,15 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('receipts:print', (_event, id: number) => printReceipt(id))
   ipcMain.handle('receipts:pdf', (_event, id: number) => exportReceiptPdf(id))
+  ipcMain.handle('receipts:printTest', () => printTestPage())
+  ipcMain.handle('customers:printStatement', (_event, id: number) => printCustomerStatement(id))
+  ipcMain.handle('customers:statementPdf', (_event, id: number) => exportCustomerStatementPdf(id))
+  ipcMain.handle('reports:pdf', (_event, range: { fromDate: string; toDate: string }) =>
+    exportReportsPdf(range)
+  )
+  ipcMain.handle('reports:print', (_event, range: { fromDate: string; toDate: string }) =>
+    printReports(range)
+  )
 
   ipcMain.handle('audit:list', () => {
     requireRole('admin')

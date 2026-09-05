@@ -19,6 +19,10 @@ export function canVoidReceipt(role: UserRole): boolean {
   return role === 'admin' || role === 'manager'
 }
 
+export function canAdjustReceipt(role: UserRole): boolean {
+  return canVoidReceipt(role)
+}
+
 export function canEditProducts(role: UserRole): boolean {
   return role === 'admin' || role === 'manager'
 }

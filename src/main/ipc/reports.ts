@@ -77,14 +77,19 @@ export function registerReportHandlers(): void {
 
   ipcMain.handle(
     'reports:get',
-    (_event, range: { fromDate: string; toDate: string }): ReportsData => {
+    (_event, range: { fromDate: string; toDate: string }): ReportsData => getReportsData(range)
+  )
+}
+
+export function getReportsData(range: { fromDate: string; toDate: string }): ReportsData {
       const user = requireSession()
       const fromDate = range.fromDate || todayIsoDate()
       const toDate = range.toDate || todayIsoDate()
       const db = getDb()
+      const ownShiftOnly = !canViewAllReports(user.role)
 
-      const cashierFilter = canViewAllReports(user.role) ? '' : ' AND r.cashier_id = ?'
-      const cashierParams = canViewAllReports(user.role) ? [] : [user.id]
+      const cashierFilter = ownShiftOnly ? ' AND r.cashier_id = ?' : ''
+      const cashierParams = ownShiftOnly ? [user.id] : []
 
       const sales = db
         .prepare(
@@ -106,13 +111,20 @@ export function registerReportHandlers(): void {
         paid: number
       }>
 
-      const outstanding = db
-        .prepare(
-          `SELECT id, name, phone, current_balance FROM customers
-           WHERE branch_id = ? AND current_balance > 0
-           ORDER BY current_balance DESC`
-        )
-        .all(user.branchId) as Array<{ id: number; name: string; phone: string; current_balance: number }>
+      const outstanding = ownShiftOnly
+        ? []
+        : (db
+            .prepare(
+              `SELECT id, name, phone, current_balance FROM customers
+               WHERE branch_id = ? AND current_balance > 0
+               ORDER BY current_balance DESC`
+            )
+            .all(user.branchId) as Array<{
+            id: number
+            name: string
+            phone: string
+            current_balance: number
+          }>)
 
       const productSales = db
         .prepare(
@@ -132,6 +144,8 @@ export function registerReportHandlers(): void {
         total: number
       }>
 
+      const paymentFilter = ownShiftOnly ? ' AND p.recorded_by = ?' : ''
+      const paymentParams = ownShiftOnly ? [user.id] : []
       const payments = db
         .prepare(
           `SELECT p.method, COUNT(*) AS count, SUM(p.amount) AS total
@@ -140,10 +154,11 @@ export function registerReportHandlers(): void {
            WHERE p.branch_id = ?
              AND substr(p.payment_date, 1, 10) >= ? AND substr(p.payment_date, 1, 10) <= ?
              AND (p.receipt_id IS NULL OR r.status = 'active')
+             ${paymentFilter}
            GROUP BY p.method
            ORDER BY total DESC`
         )
-        .all(user.branchId, fromDate, toDate) as Array<{
+        .all(user.branchId, fromDate, toDate, ...paymentParams) as Array<{
         method: PaymentMethod
         count: number
         total: number
@@ -154,6 +169,7 @@ export function registerReportHandlers(): void {
       return {
         fromDate,
         toDate,
+        ownShiftOnly,
         sales: sales.map((row) => ({
           date: row.day,
           cashierName: row.cashier_name,
@@ -179,6 +195,4 @@ export function registerReportHandlers(): void {
           totalKobo: row.total
         }))
       }
-    }
-  )
 }

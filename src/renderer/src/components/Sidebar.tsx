@@ -8,9 +8,10 @@ interface SidebarProps {
   username: string
   fullName: string
   onLogout: () => void
+  onRefresh: () => void
 }
 
-export function Sidebar({ role, username, fullName, onLogout }: SidebarProps): React.JSX.Element {
+export function Sidebar({ role, username, fullName, onLogout, onRefresh }: SidebarProps): React.JSX.Element {
   const items = NAV_ITEMS.filter((item) => canAccessScreen(role, item.screen))
 
   return (
@@ -46,10 +47,23 @@ export function Sidebar({ role, username, fullName, onLogout }: SidebarProps): R
         <p className="text-xs capitalize text-white/60">
           {username} · {role}
         </p>
+        <NavLink
+          to="/profile"
+          className="mt-3 block w-full rounded-md border border-white/20 px-3 py-1.5 text-center text-sm text-white hover:bg-white/10"
+        >
+          Change password
+        </NavLink>
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="mt-2 w-full rounded-md bg-gold px-3 py-1.5 text-sm font-semibold text-navy-dark hover:bg-gold-dark"
+        >
+          Refresh app
+        </button>
         <button
           type="button"
           onClick={onLogout}
-          className="mt-3 w-full rounded-md border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/10"
+          className="mt-2 w-full rounded-md border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/10"
         >
           Sign out
         </button>

@@ -25,6 +25,10 @@ export function ReceiptTicket({
         <div className="pointer-events-none absolute left-0 right-0 top-1/3 rotate-[-18deg] text-center text-5xl font-bold text-black/20">
           VOID
         </div>
+      ) : receipt.adjusted ? (
+        <div className="pointer-events-none absolute left-0 right-0 top-1/3 rotate-[-18deg] text-center text-5xl font-bold text-black/20">
+          ADJUSTED
+        </div>
       ) : null}
       <div className="text-center font-bold uppercase leading-tight">{receipt.branch.name}</div>
       <p className="mt-1 text-center text-[0.85em] leading-snug">{receipt.branch.address}</p>
@@ -68,6 +72,7 @@ export function ReceiptTicket({
       <div className="mt-3 leading-5">
         <div>
           <span className="font-bold">RECEIPT#</span> {receipt.receiptNumber}
+          {receipt.adjusted ? ' (ADJUSTED)' : ''}
         </div>
         <div>
           <span className="font-bold">DATE</span> {formatReceiptDate(receipt.receiptDate)}

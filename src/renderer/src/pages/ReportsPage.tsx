@@ -16,8 +16,16 @@ export function ReportsPage(): React.JSX.Element {
     void load()
   }, [])
 
-  function printReport(): void {
-    window.print()
+  const [notice, setNotice] = useState<string | null>(null)
+
+  async function printReport(): Promise<void> {
+    const result = await window.api.printReports({ fromDate, toDate })
+    setNotice(result.ok ? 'Print dialog opened for the report.' : result.error)
+  }
+
+  async function exportPdf(): Promise<void> {
+    const result = await window.api.exportReportsPdf({ fromDate, toDate })
+    setNotice(result.ok ? `Saved PDF: ${result.data}` : result.error)
   }
 
   return (
@@ -25,7 +33,9 @@ export function ReportsPage(): React.JSX.Element {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-navy">Reports</h1>
-          <p className="text-sm text-navy/70">Cashiers see their own shift sales only.</p>
+          <p className="text-sm text-navy/70">
+            {data?.ownShiftOnly ? 'Your shift only — sales and payments you recorded.' : 'Branch-wide sales, outstanding, products, and payments.'}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="rounded-md border border-navy/20 px-3 py-2 text-sm" />
@@ -33,11 +43,15 @@ export function ReportsPage(): React.JSX.Element {
           <button type="button" onClick={() => void load()} className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white">
             Run
           </button>
-          <button type="button" onClick={printReport} className="rounded-md border border-navy/20 px-4 py-2 text-sm font-semibold">
-            Print / PDF
+          <button type="button" onClick={() => void printReport()} className="rounded-md border border-navy/20 px-4 py-2 text-sm font-semibold">
+            Print
+          </button>
+          <button type="button" onClick={() => void exportPdf()} className="rounded-md bg-gold px-4 py-2 text-sm font-bold text-navy-dark">
+            Export PDF
           </button>
         </div>
       </div>
+      {notice ? <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-950">{notice}</p> : null}
 
       {!data ? (
         <p className="text-navy/70">Loading…</p>
@@ -77,6 +91,7 @@ export function ReportsPage(): React.JSX.Element {
             </table>
           </section>
 
+          {!data.ownShiftOnly ? (
           <section className="rounded-xl border border-navy/10 bg-white p-5">
             <h2 className="font-bold text-navy">Outstanding balances</h2>
             <table className="mt-3 w-full text-sm">
@@ -98,6 +113,7 @@ export function ReportsPage(): React.JSX.Element {
               </tbody>
             </table>
           </section>
+          ) : null}
 
           <section className="rounded-xl border border-navy/10 bg-white p-5">
             <h2 className="font-bold text-navy">Product sales</h2>

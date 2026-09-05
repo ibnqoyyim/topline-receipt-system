@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import { copyFileSync } from 'fs'
 import { basename } from 'path'
 import { dialog, ipcMain } from 'electron'
+import { runFileBackup, shopBackupDir } from '../backup'
 import { getDb, getDbPath, closeDatabase, initDatabase } from '../db'
 import { getMainWindow } from '../window'
 import type { AppSettings, PrinterInfo, Result, StaffUser, UserRole } from '../../shared/types'
@@ -229,21 +230,11 @@ export function registerSettingsHandlers(): void {
     }
   )
 
-  ipcMain.handle('settings:backup', async (): Promise<Result<string>> => {
+  ipcMain.handle('settings:backup', (): Result<string> => {
     const user = requireRole('admin')
-    const result = await dialog.showSaveDialog({
-      title: 'Backup Topline database',
-      defaultPath: `topline-backup-${new Date().toISOString().slice(0, 10)}.db`,
-      filters: [{ name: 'SQLite database', extensions: ['db'] }]
-    })
-    if (result.canceled || !result.filePath) {
-      return { ok: false, error: 'Backup cancelled.' }
-    }
-    getDb().pragma('wal_checkpoint(FULL)')
-    copyFileSync(getDbPath(), result.filePath)
-    upsertSetting('last_backup_at', new Date().toISOString())
-    writeAudit(user.id, 'create', 'backup', null, { path: result.filePath })
-    return { ok: true, data: result.filePath }
+    const dest = runFileBackup()
+    writeAudit(user.id, 'create', 'backup', null, { path: dest, folder: shopBackupDir() })
+    return { ok: true, data: dest }
   })
 
   ipcMain.handle('settings:restore', async (): Promise<Result<string>> => {

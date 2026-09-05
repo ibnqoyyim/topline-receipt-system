@@ -57,6 +57,10 @@ export function AppShell(): React.JSX.Element {
     }
   }, [logout])
 
+  function refreshApp(): void {
+    window.location.reload()
+  }
+
   if (!user) {
     return <Navigate to="/login" replace />
   }
@@ -68,10 +72,23 @@ export function AppShell(): React.JSX.Element {
         username={user.username}
         fullName={user.fullName}
         onLogout={() => void logout()}
+        onRefresh={refreshApp}
       />
-      <main className="min-w-0 flex-1 overflow-y-auto bg-[#f4f1ea]">
-        <Outlet />
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col bg-[#f4f1ea]">
+        <header className="flex shrink-0 items-center justify-between border-b border-navy/10 bg-white px-6 py-3">
+          <p className="text-sm font-medium text-navy">Topline Receipt System</p>
+          <button
+            type="button"
+            onClick={refreshApp}
+            className="rounded-md border border-navy/20 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/5"
+          >
+            Refresh
+          </button>
+        </header>
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }
