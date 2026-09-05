@@ -5,9 +5,13 @@ import icon from '../../resources/icon.png?asset'
 import { ensureFirstBackup } from './backup'
 import { closeDatabase, initDatabase } from './db'
 import { registerIpcHandlers } from './ipc'
+import { readSettings } from './ipc/session'
+import { closeSplash, showSplash } from './splash'
+import { applyOpenAtLogin } from './startup'
 import { setMainWindow } from './window'
 
 function createWindow(): void {
+  const splash = showSplash(icon)
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -26,9 +30,21 @@ function createWindow(): void {
 
   setMainWindow(mainWindow)
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+  let revealed = false
+  function revealMain(): void {
+    if (revealed) return
+    revealed = true
+    void splash.finished.then(() => {
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.show()
+        mainWindow.focus()
+      }
+      closeSplash(splash.window)
+    })
+  }
+
+  mainWindow.on('ready-to-show', revealMain)
+  setTimeout(revealMain, 6000)
 
   mainWindow.on('closed', () => {
     setMainWindow(null)
@@ -50,6 +66,7 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.topline.receiptsystem')
   initDatabase()
   ensureFirstBackup()
+  applyOpenAtLogin(readSettings().openAtLogin)
   registerIpcHandlers()
 
   app.on('browser-window-created', (_, window) => {

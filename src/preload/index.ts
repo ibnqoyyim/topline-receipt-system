@@ -30,6 +30,8 @@ const api = {
   changePassword: (currentPassword: string, newPassword: string): Promise<ChangePasswordResult> =>
     ipcRenderer.invoke('auth:changePassword', { currentPassword, newPassword }),
   getAppContext: (): Promise<AppContext> => ipcRenderer.invoke('app:context'),
+  factoryResetApp: (password: string, confirm: string): Promise<Result<string>> =>
+    ipcRenderer.invoke('app:factoryReset', { password, confirm }),
 
   getDashboard: (): Promise<DashboardData> => ipcRenderer.invoke('dashboard:data'),
 
@@ -117,6 +119,7 @@ const api = {
       stockTrackingEnabled: boolean
       backupReminderDays: number
       debtAlertKobo: number
+      openAtLogin: boolean
     }
   }): Promise<Result<SettingsPayload['settings']>> => ipcRenderer.invoke('settings:save', input),
   listUsers: (): Promise<StaffUser[]> => ipcRenderer.invoke('settings:users'),

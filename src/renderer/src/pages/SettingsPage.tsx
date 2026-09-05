@@ -2,10 +2,13 @@ import { FormEvent, useEffect, useState } from 'react'
 import { formatReceiptNumber } from '@shared/format'
 import { koboToNairaGrouped, tryNairaToKobo } from '@shared/money'
 import type { AuditRow, BranchInfo, PrinterInfo, SettingsPayload, StaffUser, UserRole } from '@shared/types'
+import { useAuth } from '../context/AuthContext'
 
 const inputClass = 'mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm outline-none focus:border-gold'
 
 export function SettingsPage(): React.JSX.Element {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [payload, setPayload] = useState<SettingsPayload | null>(null)
   const [branch, setBranch] = useState<BranchInfo | null>(null)
   const [nextNumber, setNextNumber] = useState('1')
@@ -15,6 +18,11 @@ export function SettingsPage(): React.JSX.Element {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userForm, setUserForm] = useState<Partial<StaffUser> & { password?: string } | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetConfirm, setResetConfirm] = useState('')
+  const [resetError, setResetError] = useState<string | null>(null)
+  const [resetting, setResetting] = useState(false)
 
   async function load(): Promise<void> {
     const [settingsPayload, printerRows, userRows, auditRows] = await Promise.all([
@@ -82,6 +90,33 @@ export function SettingsPage(): React.JSX.Element {
     const result = await window.api.restoreDatabase()
     setMessage(result.ok ? `Restored from ${result.data}. Sign in again if needed.` : result.error)
     await load()
+  }
+
+  async function resetApp(): Promise<void> {
+    if (!isAdmin) {
+      setResetError('Only an administrator can reset and delete shop data.')
+      return
+    }
+    if (resetConfirm.trim().toUpperCase() !== 'DELETE') {
+      setResetError('Type DELETE to confirm you want to erase all shop data.')
+      return
+    }
+    if (!resetPassword) {
+      setResetError('Enter your admin password to reset.')
+      return
+    }
+    setResetting(true)
+    setResetError(null)
+    try {
+      const result = await window.api.factoryResetApp(resetPassword, resetConfirm)
+      if (!result.ok) {
+        setResetError(result.error)
+        setResetting(false)
+      }
+    } catch {
+      setResetError('Could not reset. Sign in as admin and try again.')
+      setResetting(false)
+    }
   }
 
   async function saveUser(event: FormEvent): Promise<void> {
@@ -249,6 +284,16 @@ export function SettingsPage(): React.JSX.Element {
             />
             Enable live stock tracking
           </label>
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={payload.settings.openAtLogin}
+              onChange={(event) =>
+                setPayload({ ...payload, settings: { ...payload.settings, openAtLogin: event.target.checked } })
+              }
+            />
+            Open Topline when Windows starts
+          </label>
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
             <label className="text-sm">
               Idle logout (minutes)
@@ -355,11 +400,78 @@ export function SettingsPage(): React.JSX.Element {
           <button type="button" onClick={() => void backup()} className="rounded-md bg-navy px-4 py-2 text-sm font-semibold text-white">
             Backup now
           </button>
-          <button type="button" onClick={() => void restore()} className="rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700">
-            Restore…
-          </button>
+          {isAdmin ? (
+            <button type="button" onClick={() => void restore()} className="rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700">
+              Restore…
+            </button>
+          ) : null}
         </div>
       </section>
+
+      {isAdmin ? (
+      <section className="mt-6 rounded-xl border border-navy/10 bg-white p-5">
+        <button
+          type="button"
+          onClick={() => {
+            setShowAdvanced((open) => !open)
+            setResetError(null)
+            setResetPassword('')
+            setResetConfirm('')
+          }}
+          className="text-sm font-semibold text-navy/50 hover:text-navy"
+        >
+          {showAdvanced ? 'Hide advanced' : 'Show advanced'}
+        </button>
+        {showAdvanced ? (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-red-800">Reset and delete all data (admin only)</h2>
+            <p className="mt-2 text-sm text-red-950">
+              Erases receipts, customers, payments, products and users, then starts the shop as new.
+              A backup is saved to the Desktop <span className="font-semibold">Topline Backups</span> folder
+              first. After reset, sign in as <span className="font-semibold">admin</span> /{' '}
+              <span className="font-semibold">changeme</span>.
+            </p>
+            <p className="mt-2 text-sm text-navy/70">
+              To remove the program from this PC, use Windows Settings → Apps. That uninstall does not
+              delete the shop database unless you reset here first.
+            </p>
+            <label className="mt-3 block text-sm">
+              Type DELETE to confirm
+              <input
+                value={resetConfirm}
+                onChange={(event) => {
+                  setResetConfirm(event.target.value)
+                  setResetError(null)
+                }}
+                className={inputClass}
+              />
+            </label>
+            <label className="mt-3 block text-sm">
+              Your password
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={resetPassword}
+                onChange={(event) => {
+                  setResetPassword(event.target.value)
+                  setResetError(null)
+                }}
+                className={inputClass}
+              />
+            </label>
+            {resetError ? <p className="mt-2 text-sm text-red-700">{resetError}</p> : null}
+            <button
+              type="button"
+              disabled={resetting || !resetPassword || resetConfirm.trim().toUpperCase() !== 'DELETE'}
+              onClick={() => void resetApp()}
+              className="mt-3 rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {resetting ? 'Deleting…' : 'Reset and delete all data'}
+            </button>
+          </div>
+        ) : null}
+      </section>
+      ) : null}
 
       <section className="mt-6 rounded-xl border border-navy/10 bg-white p-5">
         <h2 className="text-sm font-bold uppercase tracking-wide text-gold-dark">Audit log</h2>
@@ -420,6 +532,8 @@ export function SettingsPage(): React.JSX.Element {
           </div>
         </form>
       ) : null}
+
+      <p className="mt-8 text-center text-xs text-navy/40">Developed by DataQay</p>
     </div>
   )
 }

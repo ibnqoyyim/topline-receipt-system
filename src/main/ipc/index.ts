@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
-import { ipcMain } from 'electron'
-import { getDb, getDbPath } from '../db'
+import { app, ipcMain } from 'electron'
+import { getDb, getDbPath, wipeDatabaseFiles } from '../db'
+import { runFileBackup } from '../backup'
 import {
   printReceipt,
   exportReceiptPdf,
@@ -10,7 +11,7 @@ import {
   exportReportsPdf,
   printReports
 } from '../print'
-import type { AppContext, ChangePasswordResult, LoginResult } from '../../shared/types'
+import type { AppContext, ChangePasswordResult, LoginResult, Result } from '../../shared/types'
 import { registerCustomerHandlers } from './customers'
 import { registerPaymentHandlers } from './payments'
 import { registerProductHandlers } from './products'
@@ -105,6 +106,31 @@ export function registerIpcHandlers(): void {
       setCurrentSession({ ...user, mustChangePassword: false })
       writeAudit(user.id, 'edit', 'user', user.id, { field: 'password' })
       return { ok: true }
+    }
+  )
+
+  ipcMain.handle(
+    'app:factoryReset',
+    (_event, payload: { password?: string; confirm?: string }): Result<string> => {
+      const user = requireRole('admin')
+      const password = payload?.password ?? ''
+      const confirm = (payload?.confirm ?? '').trim().toUpperCase()
+      const row = getDb()
+        .prepare('SELECT password_hash FROM users WHERE id = ?')
+        .get(user.id) as { password_hash: string } | undefined
+
+      if (confirm !== 'DELETE') {
+        return { ok: false, error: 'Type DELETE to confirm you want to erase all shop data.' }
+      }
+      if (!password || !row || !bcrypt.compareSync(password, row.password_hash)) {
+        return { ok: false, error: 'Password is incorrect.' }
+      }
+
+      const backupPath = runFileBackup()
+      wipeDatabaseFiles()
+      app.relaunch()
+      app.exit(0)
+      return { ok: true, data: backupPath }
     }
   )
 

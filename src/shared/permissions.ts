@@ -16,11 +16,11 @@ export function canAccessScreen(role: UserRole, screen: ScreenKey): boolean {
 }
 
 export function canVoidReceipt(role: UserRole): boolean {
-  return role === 'admin' || role === 'manager'
+  return role === 'admin'
 }
 
 export function canAdjustReceipt(role: UserRole): boolean {
-  return canVoidReceipt(role)
+  return role === 'admin' || role === 'manager'
 }
 
 export function canEditProducts(role: UserRole): boolean {

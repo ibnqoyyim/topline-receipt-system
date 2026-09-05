@@ -40,7 +40,10 @@ export function LoginPage(): React.JSX.Element {
             receipts stay on this computer.
           </p>
         </div>
-        <p className="text-xs text-white/40">Fully offline · Local SQLite database</p>
+        <div>
+          <p className="text-xs text-white/40">Fully offline · Local SQLite database</p>
+          <p className="mt-2 text-xs text-white/35">Developed by DataQay</p>
+        </div>
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">
@@ -90,6 +93,7 @@ export function LoginPage(): React.JSX.Element {
             First login: username <span className="font-semibold">admin</span>, password{' '}
             <span className="font-semibold">changeme</span>
           </p>
+          <p className="mt-3 text-center text-xs text-navy/40">Developed by DataQay</p>
         </form>
       </div>
     </div>

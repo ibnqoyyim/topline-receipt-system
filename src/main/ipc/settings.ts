@@ -3,6 +3,7 @@ import { copyFileSync } from 'fs'
 import { basename } from 'path'
 import { dialog, ipcMain } from 'electron'
 import { runFileBackup, shopBackupDir } from '../backup'
+import { applyOpenAtLogin } from '../startup'
 import { getDb, getDbPath, closeDatabase, initDatabase } from '../db'
 import { getMainWindow } from '../window'
 import type { AppSettings, PrinterInfo, Result, StaffUser, UserRole } from '../../shared/types'
@@ -44,6 +45,7 @@ export function registerSettingsHandlers(): void {
           stockTrackingEnabled: boolean
           backupReminderDays: number
           debtAlertKobo: number
+          openAtLogin: boolean
         }
       }
     ): Result<AppSettings> => {
@@ -82,6 +84,8 @@ export function registerSettingsHandlers(): void {
       upsertSetting('stock_tracking_enabled', input.settings.stockTrackingEnabled ? '1' : '0')
       upsertSetting('backup_reminder_days', String(input.settings.backupReminderDays || 7))
       upsertSetting('debt_alert_kobo', String(input.settings.debtAlertKobo || 0))
+      upsertSetting('open_at_login', input.settings.openAtLogin ? '1' : '0')
+      applyOpenAtLogin(Boolean(input.settings.openAtLogin))
 
       writeAudit(user.id, 'edit', 'settings', user.branchId, { prefix, nextNumber: input.nextNumber })
       return { ok: true, data: readSettings() }

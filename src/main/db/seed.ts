@@ -43,7 +43,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   stock_tracking_enabled: '0',
   backup_reminder_days: '7',
   debt_alert_kobo: '5000000',
-  last_backup_at: ''
+  last_backup_at: '',
+  open_at_login: '1'
 }
 
 export const STARTING_RECEIPT_NUMBER = 6782

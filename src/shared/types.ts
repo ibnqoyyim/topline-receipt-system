@@ -49,6 +49,7 @@ export interface AppSettings {
   backupReminderDays: number
   debtAlertKobo: number
   lastBackupAt: string
+  openAtLogin: boolean
 }
 
 export interface AppContext {

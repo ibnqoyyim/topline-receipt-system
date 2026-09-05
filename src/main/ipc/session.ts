@@ -116,7 +116,8 @@ export function readSettings(): AppSettings {
     stockTrackingEnabled: map.stock_tracking_enabled === '1',
     backupReminderDays: Number(map.backup_reminder_days ?? 7),
     debtAlertKobo: Number(map.debt_alert_kobo ?? 5_000_000),
-    lastBackupAt: map.last_backup_at ?? ''
+    lastBackupAt: map.last_backup_at ?? '',
+    openAtLogin: map.open_at_login === '1'
   }
 }
 

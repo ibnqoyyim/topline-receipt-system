@@ -1,7 +1,9 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { PageLoadingScreen } from './PageLoadingScreen'
 import { Sidebar } from './Sidebar'
+import { usePageLoadingScreen } from './usePageLoadingScreen'
 
 export function RequireAuth(): React.JSX.Element {
   const { ready, user } = useAuth()
@@ -33,6 +35,7 @@ export function RequireAuth(): React.JSX.Element {
 export function AppShell(): React.JSX.Element {
   const { user, logout } = useAuth()
   const timer = useRef<number | null>(null)
+  const pageLoading = usePageLoadingScreen()
 
   useEffect(() => {
     let minutes = 15
@@ -74,16 +77,22 @@ export function AppShell(): React.JSX.Element {
         onLogout={() => void logout()}
         onRefresh={refreshApp}
       />
-      <div className="flex min-w-0 flex-1 flex-col bg-[#f4f1ea]">
+      <div className="relative flex min-w-0 flex-1 flex-col bg-[#f4f1ea]">
+        {pageLoading.visible ? <PageLoadingScreen fading={pageLoading.fading} /> : null}
         <header className="flex shrink-0 items-center justify-between border-b border-navy/10 bg-white px-6 py-3">
-          <p className="text-sm font-medium text-navy">Topline Receipt System</p>
-          <button
-            type="button"
-            onClick={refreshApp}
-            className="rounded-md border border-navy/20 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/5"
-          >
-            Refresh
-          </button>
+          <div>
+            <p className="text-sm font-medium text-navy">Topline Receipt System</p>
+            <p className="text-[11px] text-navy/45">Developed by DataQay</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={refreshApp}
+              className="rounded-md border border-navy/20 px-3 py-1.5 text-sm font-semibold text-navy hover:bg-navy/5"
+            >
+              Refresh
+            </button>
+          </div>
         </header>
         <main className="min-w-0 flex-1 overflow-y-auto">
           <Outlet />

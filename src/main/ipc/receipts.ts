@@ -308,7 +308,7 @@ function saveReceipt(input: SaveReceiptInput): Result<ReceiptDetail> {
 function voidReceipt(id: number): Result<ReceiptDetail> {
   const user = requireSession()
   if (!canVoidReceipt(user.role)) {
-    return { ok: false, error: 'You do not have permission to void receipts.' }
+    return { ok: false, error: 'Only an administrator can void receipts.' }
   }
 
   const db = getDb()

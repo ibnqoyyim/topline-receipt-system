@@ -1,4 +1,5 @@
 import { app } from 'electron'
+import { existsSync, unlinkSync } from 'fs'
 import { join } from 'path'
 import Database from 'better-sqlite3'
 import { migrate } from './migrate'
@@ -42,5 +43,22 @@ export function closeDatabase(): void {
 export function reopenDatabase(): ReturnType<typeof initDatabase> {
   closeDatabase()
   return initDatabase()
+}
+
+/** Close and delete the shop database so the next launch reseeds a blank store. */
+export function wipeDatabaseFiles(): void {
+  const dbPath = getDbPath()
+  if (db) {
+    try {
+      db.pragma('wal_checkpoint(FULL)')
+    } catch {
+      /* still delete the files */
+    }
+    closeDatabase()
+  }
+  for (const suffix of ['', '-wal', '-shm']) {
+    const file = `${dbPath}${suffix}`
+    if (existsSync(file)) unlinkSync(file)
+  }
 }
 
