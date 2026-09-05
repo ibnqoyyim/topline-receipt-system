@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { formatReceiptNumber } from '@shared/format'
 import { koboToNairaGrouped, tryNairaToKobo } from '@shared/money'
 import type { AuditRow, BranchInfo, PrinterInfo, SettingsPayload, StaffUser, UserRole } from '@shared/types'
+import settingsIcon from '../assets/topline_icon_512.png'
 import { useAuth } from '../context/AuthContext'
 
 const inputClass = 'mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm outline-none focus:border-gold'
@@ -147,8 +148,13 @@ export function SettingsPage(): React.JSX.Element {
 
   return (
     <div className="px-8 py-8">
-      <h1 className="text-2xl font-bold text-navy">Settings</h1>
-      <p className="text-sm text-navy/70">Administrator only. Database file: {payload.dbPath}</p>
+      <div className="flex items-start gap-4">
+        <img src={settingsIcon} alt="Topline Stores" className="h-20 w-20 rounded-full" />
+        <div>
+          <h1 className="text-2xl font-bold text-navy">Settings</h1>
+          <p className="text-sm text-navy/70">Administrator only. Database file: {payload.dbPath}</p>
+        </div>
+      </div>
       {message ? <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{message}</p> : null}
       {error ? <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 

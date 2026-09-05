@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatNaira, formatOutstanding } from '@shared/money'
 import type { DashboardData } from '@shared/types'
+import headerIcon from '../assets/topline_icon_256.png'
 import { useAuth } from '../context/AuthContext'
 
 export function DashboardPage(): React.JSX.Element {
@@ -26,11 +27,14 @@ export function DashboardPage(): React.JSX.Element {
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-navy">Dashboard</h1>
-          <p className="mt-1 text-sm text-navy/70">
-            Welcome back, {user?.fullName}. Next receipt {data.nextReceiptNumber}.
-          </p>
+        <div className="flex items-start gap-3">
+          <img src={headerIcon} alt="Topline Stores" className="h-12 w-12 rounded-full" />
+          <div>
+            <h1 className="text-2xl font-bold text-navy">Dashboard</h1>
+            <p className="mt-1 text-sm text-navy/70">
+              Welcome back, {user?.fullName}. Next receipt {data.nextReceiptNumber}.
+            </p>
+          </div>
         </div>
         <Link
           to="/receipts/new"

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import logo from '../assets/logo.png'
+import logo from '../assets/topline_icon_256.png'
 
 export function LoginPage(): React.JSX.Element {
   const { user, login } = useAuth()

@@ -10,10 +10,13 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-export function buildReceiptHtml(receipt: ReceiptDetail, width: '58mm' | '80mm'): string {
+export function buildReceiptHtml(
+  receipt: ReceiptDetail,
+  width: '58mm' | '80mm',
+  markSrc: string
+): string {
   const mm = width === '58mm' ? 58 : 80
-  const font = width === '58mm' ? '11px' : '13px'
-  const name = receipt.branch.name.toUpperCase()
+  const font = width === '58mm' ? '12px' : '14px'
   const voided = receipt.status === 'voided'
 
   const rows = receipt.items
@@ -44,12 +47,25 @@ export function buildReceiptHtml(receipt: ReceiptDetail, width: '58mm' | '80mm')
       color: #000;
       background: #fff;
     }
-    .ticket { padding: 4mm 3mm 8mm; position: relative; }
+    .ticket { padding: 3mm 3mm 8mm; position: relative; }
+    .mark {
+      display: block;
+      width: 9mm;
+      height: 9mm;
+      margin: 0 auto 2mm;
+      object-fit: contain;
+    }
+    .shop {
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.25;
+      font-size: 1.15em;
+      margin: 0 0 1.5mm;
+    }
+    .muted { text-align: center; line-height: 1.35; margin: 0; font-weight: 700; }
     .center { text-align: center; }
     .bold { font-weight: 700; }
-    .small { font-size: 0.85em; }
-    .header { font-weight: 700; text-transform: uppercase; line-height: 1.25; margin-bottom: 2mm; }
-    .muted { line-height: 1.3; margin: 0; }
     .rule { border-top: 1px dashed #000; margin: 3mm 0; }
     .cols { display: grid; grid-template-columns: 2.4em 1fr 6.2em; font-weight: 700; margin-bottom: 1mm; }
     .line { display: grid; grid-template-columns: 2.4em 1fr 6.2em; align-items: start; margin-bottom: 1.5mm; }
@@ -70,10 +86,11 @@ export function buildReceiptHtml(receipt: ReceiptDetail, width: '58mm' | '80mm')
 <body>
   <div class="ticket">
     ${voided ? '<div class="watermark">VOID</div>' : ''}
-    <div class="header center">${escapeHtml(name)}</div>
-    <p class="muted center small">${escapeHtml(receipt.branch.address)}</p>
-    <p class="muted center small">TEL: ${escapeHtml(receipt.branch.phone)}</p>
-    <p class="muted center small">EMAIL: ${escapeHtml(receipt.branch.email)}</p>
+    <img class="mark" src="${markSrc}" alt="" />
+    <div class="shop">${escapeHtml(receipt.branch.name)}</div>
+    <p class="muted">${escapeHtml(receipt.branch.address)}</p>
+    <p class="muted">TEL: ${escapeHtml(receipt.branch.phone)}</p>
+    <p class="muted">EMAIL: ${escapeHtml(receipt.branch.email)}</p>
     <div class="rule"></div>
     <div class="cols">
       <div>QTY</div>

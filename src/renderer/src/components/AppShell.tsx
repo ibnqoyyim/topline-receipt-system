@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
+import headerIcon from '../assets/topline_icon_256.png'
 import { useAuth } from '../context/AuthContext'
 import { PageLoadingScreen } from './PageLoadingScreen'
 import { Sidebar } from './Sidebar'
@@ -80,9 +81,12 @@ export function AppShell(): React.JSX.Element {
       <div className="relative flex min-w-0 flex-1 flex-col bg-[#f4f1ea]">
         {pageLoading.visible ? <PageLoadingScreen fading={pageLoading.fading} /> : null}
         <header className="flex shrink-0 items-center justify-between border-b border-navy/10 bg-white px-6 py-3">
-          <div>
-            <p className="text-sm font-medium text-navy">Topline Receipt System</p>
-            <p className="text-[11px] text-navy/45">Developed by DataQay</p>
+          <div className="flex items-center gap-3">
+            <img src={headerIcon} alt="Topline Stores" className="h-10 w-10 rounded-full" />
+            <div>
+              <p className="text-sm font-medium text-navy">Topline Receipt System</p>
+              <p className="text-[11px] text-navy/45">Developed by DataQay</p>
+            </div>
           </div>
           <div className="flex gap-2">
             <button

@@ -1,6 +1,7 @@
 import { formatReceiptDate, paymentMethodLabel } from '@shared/format'
 import { formatNaira, formatOutstanding, koboToNairaGrouped } from '@shared/money'
 import type { ReceiptDetail } from '@shared/types'
+import receiptMark from '../assets/topline_icon_print_bw.png'
 
 export function ReceiptTicket({
   receipt,
@@ -17,7 +18,7 @@ export function ReceiptTicket({
       style={{
         width: mm,
         fontFamily: '"Courier New", Courier, monospace',
-        fontSize: width === '58mm' ? 11 : 13,
+        fontSize: width === '58mm' ? 12 : 14,
         padding: '12px 10px 20px'
       }}
     >
@@ -30,10 +31,15 @@ export function ReceiptTicket({
           ADJUSTED
         </div>
       ) : null}
-      <div className="text-center font-bold uppercase leading-tight">{receipt.branch.name}</div>
-      <p className="mt-1 text-center text-[0.85em] leading-snug">{receipt.branch.address}</p>
-      <p className="text-center text-[0.85em]">TEL: {receipt.branch.phone}</p>
-      <p className="text-center text-[0.85em]">EMAIL: {receipt.branch.email}</p>
+      <img
+        src={receiptMark}
+        alt=""
+        style={{ display: 'block', width: 36, height: 36, margin: '0 auto 8px' }}
+      />
+      <div className="text-center text-[1.15em] font-bold uppercase leading-tight">{receipt.branch.name}</div>
+      <p className="mt-1 text-center font-bold leading-snug">{receipt.branch.address}</p>
+      <p className="text-center font-bold">TEL: {receipt.branch.phone}</p>
+      <p className="text-center font-bold">EMAIL: {receipt.branch.email}</p>
       <div className="my-2 border-t border-dashed border-black" />
       <div className="grid grid-cols-[2.4em_1fr_6.2em] font-bold">
         <div>QTY</div>

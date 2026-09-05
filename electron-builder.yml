@@ -15,12 +15,14 @@ asarUnpack:
   - '**/*.node'
 win:
   executableName: Topline Receipt System
-  icon: build/icon.png
-  signAndEditExecutable: false
+  icon: build/topline_icon.ico
+  signExecutable: false
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
+  installerIcon: build/topline_icon.ico
+  uninstallerIcon: build/topline_icon.ico
   createDesktopShortcut: always
   createStartMenuShortcut: true
   oneClick: false

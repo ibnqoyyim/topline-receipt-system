@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import logo from '../assets/logo.png'
+import logo from '../assets/topline_icon_256.png'
 
 export function ChangePasswordPage(): React.JSX.Element {
   const { markPasswordChanged } = useAuth()

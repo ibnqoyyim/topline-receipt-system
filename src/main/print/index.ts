@@ -1,5 +1,6 @@
 import { BrowserWindow, dialog } from 'electron'
-import { writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
+import receiptMarkPng from '../../../assets/topline_icon_print_bw.png?asset'
 import type { ReceiptDetail, Result } from '../../shared/types'
 import { nowLocalIso } from '../../shared/format'
 import { loadCustomerHistory } from '../ipc/customers'
@@ -9,6 +10,10 @@ import { getBranch, getCurrentSession, readSettings } from '../ipc/session'
 import { buildReceiptHtml } from './receiptHtml'
 import { buildReportsHtml } from './reportsHtml'
 import { buildStatementHtml } from './statementHtml'
+
+function receiptMarkSrc(): string {
+  return `data:image/png;base64,${readFileSync(receiptMarkPng).toString('base64')}`
+}
 
 function testReceipt(): ReceiptDetail {
   return {
@@ -79,7 +84,7 @@ async function renderReceiptWindow(
   const receipt = loadReceipt(receiptId, session.branchId)
   if (!receipt) throw new Error('Receipt was not found.')
   const width = readSettings().printerWidth
-  const html = buildReceiptHtml(receipt, width)
+  const html = buildReceiptHtml(receipt, width, receiptMarkSrc())
 
   const win = new BrowserWindow({
     show: showWindow,
@@ -134,7 +139,7 @@ export async function printTestPage(): Promise<Result<true>> {
     if (!session) throw new Error('Not signed in')
     const width = readSettings().printerWidth
     const printerName = readSettings().printerName
-    const html = buildReceiptHtml(testReceipt(), width)
+    const html = buildReceiptHtml(testReceipt(), width, receiptMarkSrc())
     const win = new BrowserWindow({
       show: true,
       width: width === '58mm' ? 320 : 400,

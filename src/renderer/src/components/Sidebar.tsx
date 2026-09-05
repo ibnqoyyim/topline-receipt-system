@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { NAV_ITEMS, canAccessScreen } from '../../../shared/permissions'
 import type { UserRole } from '../../../shared/types'
-import logo from '../assets/logo.png'
+import logo from '../assets/topline_icon_256.png'
 
 interface SidebarProps {
   role: UserRole

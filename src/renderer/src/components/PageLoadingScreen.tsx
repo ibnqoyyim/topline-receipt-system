@@ -1,4 +1,4 @@
-import storeLogo from '../assets/logo.png'
+import storeLogo from '../assets/topline_icon_256.png'
 
 /** Swap this import (or assign another URL) to change the splash logo. */
 export const PAGE_LOADING_LOGO_SRC = storeLogo

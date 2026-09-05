@@ -1,7 +1,8 @@
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import appIcon from '../../build/topline_icon.ico?asset'
+import splashLogo from '../../assets/topline_icon_512.png?asset'
 import { ensureFirstBackup } from './backup'
 import { closeDatabase, initDatabase } from './db'
 import { registerIpcHandlers } from './ipc'
@@ -11,7 +12,7 @@ import { applyOpenAtLogin } from './startup'
 import { setMainWindow } from './window'
 
 function createWindow(): void {
-  const splash = showSplash(icon)
+  const splash = showSplash(splashLogo)
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -20,7 +21,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'Topline Receipt System',
-    icon,
+    icon: appIcon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
