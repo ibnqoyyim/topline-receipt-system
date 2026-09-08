@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { PasswordInput } from '../components/PasswordInput'
 
 export function ProfilePage(): React.JSX.Element {
   const { user, markPasswordChanged } = useAuth()
@@ -43,30 +44,15 @@ export function ProfilePage(): React.JSX.Element {
         <h2 className="text-sm font-bold uppercase tracking-wide text-gold-dark">Change password</h2>
         <label className="mt-4 block text-sm">
           Current password
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm outline-none focus:border-gold"
-          />
+          <PasswordInput className="text-sm" value={currentPassword} onChange={setCurrentPassword} />
         </label>
         <label className="mt-3 block text-sm">
           New password
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm outline-none focus:border-gold"
-          />
+          <PasswordInput className="text-sm" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
         </label>
         <label className="mt-3 block text-sm">
           Confirm new password
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm outline-none focus:border-gold"
-          />
+          <PasswordInput className="text-sm" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
         </label>
         {error ? <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
         {notice ? <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{notice}</p> : null}

@@ -110,6 +110,68 @@ export function registerIpcHandlers(): void {
   )
 
   ipcMain.handle(
+    'auth:forgotPassword',
+    (
+      _event,
+      payload: { username?: string; shopPhone?: string; newPassword?: string }
+    ): ChangePasswordResult => {
+      const username = payload.username?.trim() ?? ''
+      const shopPhone = payload.shopPhone?.trim() ?? ''
+      const newPassword = payload.newPassword ?? ''
+
+      if (!username) {
+        return { ok: false, error: 'Enter your username.' }
+      }
+
+      const row = getDb()
+        .prepare(
+          `SELECT id, branch_id, username, password_hash, full_name, role, active, must_change_password
+           FROM users WHERE username = ? COLLATE NOCASE`
+        )
+        .get(username) as UserRow | undefined
+
+      if (!row || row.active !== 1) {
+        return { ok: false, error: 'That username was not found.' }
+      }
+
+      if (row.role !== 'admin') {
+        return {
+          ok: false,
+          error: 'Ask the administrator to set a new password in Settings → Users.'
+        }
+      }
+
+      if (newPassword.length < 8) {
+        return { ok: false, error: 'New password must be at least 8 characters.' }
+      }
+      if (newPassword.toLowerCase() === 'changeme') {
+        return { ok: false, error: 'Choose a password other than the default.' }
+      }
+
+      const branch = getBranch(row.branch_id)
+      const storedDigits = branch.phone.replace(/\D/g, '')
+      const enteredDigits = shopPhone.replace(/\D/g, '')
+      const phones = branch.phone.split(/[,;/]/).map((part) => part.replace(/\D/g, '')).filter((part) => part.length >= 10)
+      const phoneOk =
+        enteredDigits.length >= 10 &&
+        (phones.some((phone) => phone === enteredDigits || phone.endsWith(enteredDigits) || enteredDigits.endsWith(phone)) ||
+          storedDigits.includes(enteredDigits))
+
+      if (!phoneOk) {
+        return { ok: false, error: 'Shop phone number is incorrect. Use a number printed on your receipts.' }
+      }
+
+      const passwordHash = bcrypt.hashSync(newPassword, 12)
+      getDb()
+        .prepare(`UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?`)
+        .run(passwordHash, row.id)
+
+      writeAudit(row.id, 'edit', 'user', row.id, { field: 'password', via: 'forgot' })
+      return { ok: true }
+    }
+  )
+
+  ipcMain.handle(
     'app:factoryReset',
     (_event, payload: { password?: string; confirm?: string }): Result<string> => {
       const user = requireRole('admin')

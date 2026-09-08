@@ -4,6 +4,7 @@ import { koboToNairaGrouped, tryNairaToKobo } from '@shared/money'
 import type { AuditRow, BranchInfo, PrinterInfo, SettingsPayload, StaffUser, UserRole } from '@shared/types'
 import settingsIcon from '../assets/topline_icon_512.png'
 import { useAuth } from '../context/AuthContext'
+import { PasswordInput } from '../components/PasswordInput'
 
 const inputClass = 'mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm outline-none focus:border-gold'
 
@@ -454,15 +455,14 @@ export function SettingsPage(): React.JSX.Element {
             </label>
             <label className="mt-3 block text-sm">
               Your password
-              <input
-                type="password"
+              <PasswordInput
+                className="text-sm"
                 autoComplete="current-password"
                 value={resetPassword}
-                onChange={(event) => {
-                  setResetPassword(event.target.value)
+                onChange={(value) => {
+                  setResetPassword(value)
                   setResetError(null)
                 }}
-                className={inputClass}
               />
             </label>
             {resetError ? <p className="mt-2 text-sm text-red-700">{resetError}</p> : null}
@@ -513,7 +513,11 @@ export function SettingsPage(): React.JSX.Element {
             </label>
             <label className="mt-3 block text-sm">
               Password {userForm.id ? '(leave blank to keep)' : ''}
-              <input type="password" value={userForm.password ?? ''} onChange={(event) => setUserForm({ ...userForm, password: event.target.value })} className={inputClass} />
+              <PasswordInput
+                className="text-sm"
+                value={userForm.password ?? ''}
+                onChange={(value) => setUserForm({ ...userForm, password: value })}
+              />
             </label>
             <label className="mt-3 flex items-center gap-2 text-sm">
               <input type="checkbox" checked={userForm.active !== false} onChange={(event) => setUserForm({ ...userForm, active: event.target.checked })} />

@@ -2,13 +2,18 @@ import { FormEvent, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/topline_icon_256.png'
+import { PasswordInput } from '../components/PasswordInput'
 
 export function LoginPage(): React.JSX.Element {
   const { user, login } = useAuth()
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [forgot, setForgot] = useState(false)
+  const [shopPhone, setShopPhone] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
   if (user) {
     return <Navigate to={user.mustChangePassword ? '/change-password' : '/dashboard'} replace />
@@ -18,9 +23,28 @@ export function LoginPage(): React.JSX.Element {
     event.preventDefault()
     setBusy(true)
     setError(null)
+    setNotice(null)
     const message = await login(username, password)
     if (message) setError(message)
     setBusy(false)
+  }
+
+  async function onForgot(event: FormEvent): Promise<void> {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+    setNotice(null)
+    const result = await window.api.forgotPassword(username, shopPhone, newPassword)
+    setBusy(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    setPassword(newPassword)
+    setShopPhone('')
+    setNewPassword('')
+    setForgot(false)
+    setNotice('Password updated. Sign in with the new password.')
   }
 
   return (
@@ -48,12 +72,16 @@ export function LoginPage(): React.JSX.Element {
 
       <div className="flex flex-1 items-center justify-center p-6">
         <form
-          onSubmit={(event) => void onSubmit(event)}
+          onSubmit={(event) => void (forgot ? onForgot(event) : onSubmit(event))}
           autoComplete="off"
           className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl"
         >
-          <h2 className="text-xl font-bold text-navy">Sign in</h2>
-          <p className="mt-1 text-sm text-navy/70">Use your Topline staff account.</p>
+          <h2 className="text-xl font-bold text-navy">{forgot ? 'Forgot password' : 'Sign in'}</h2>
+          <p className="mt-1 text-sm text-navy/70">
+            {forgot
+              ? 'Administrator: enter a shop phone from your receipts, then a new password. Cashier or manager: ask the administrator to reset it in Settings.'
+              : 'Use your Topline staff account.'}
+          </p>
 
           <label className="mt-6 block text-sm font-medium text-navy">
             Username
@@ -61,24 +89,39 @@ export function LoginPage(): React.JSX.Element {
               autoFocus
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 outline-none focus:border-gold"
+              className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-navy outline-none focus:border-gold"
               autoComplete="off"
             />
           </label>
 
-          <label className="mt-4 block text-sm font-medium text-navy">
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 outline-none focus:border-gold"
-              autoComplete="off"
-            />
-          </label>
+          {forgot ? (
+            <>
+              <label className="mt-4 block text-sm font-medium text-navy">
+                Shop phone
+                <input
+                  value={shopPhone}
+                  onChange={(event) => setShopPhone(event.target.value)}
+                  className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-navy outline-none focus:border-gold"
+                  placeholder="07031594752"
+                />
+              </label>
+              <label className="mt-4 block text-sm font-medium text-navy">
+                New password
+                <PasswordInput value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
+              </label>
+            </>
+          ) : (
+            <label className="mt-4 block text-sm font-medium text-navy">
+              Password
+              <PasswordInput value={password} onChange={setPassword} />
+            </label>
+          )}
 
           {error ? (
             <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+          ) : null}
+          {notice ? (
+            <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{notice}</p>
           ) : null}
 
           <button
@@ -86,7 +129,19 @@ export function LoginPage(): React.JSX.Element {
             disabled={busy}
             className="mt-6 w-full rounded-md bg-navy px-4 py-2.5 font-semibold text-white hover:bg-navy-mid disabled:opacity-60"
           >
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? 'Please wait…' : forgot ? 'Set new password' : 'Sign in'}
+          </button>
+
+          <button
+            type="button"
+            className="mt-3 w-full text-sm font-semibold text-navy-mid hover:text-navy"
+            onClick={() => {
+              setForgot((open) => !open)
+              setError(null)
+              setNotice(null)
+            }}
+          >
+            {forgot ? 'Back to sign in' : 'Forgot password?'}
           </button>
 
           <p className="mt-4 text-center text-xs text-navy/50">

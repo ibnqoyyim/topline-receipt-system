@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/topline_icon_256.png'
+import { PasswordInput } from '../components/PasswordInput'
 
 export function ChangePasswordPage(): React.JSX.Element {
   const { markPasswordChanged } = useAuth()
@@ -46,33 +47,17 @@ export function ChangePasswordPage(): React.JSX.Element {
 
         <label className="block text-sm font-medium text-navy">
           Current password
-          <input
-            type="password"
-            autoFocus
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 outline-none focus:border-gold"
-          />
+          <PasswordInput autoFocus value={currentPassword} onChange={setCurrentPassword} />
         </label>
 
         <label className="mt-4 block text-sm font-medium text-navy">
           New password
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 outline-none focus:border-gold"
-          />
+          <PasswordInput value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
         </label>
 
         <label className="mt-4 block text-sm font-medium text-navy">
           Confirm new password
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 outline-none focus:border-gold"
-          />
+          <PasswordInput value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
         </label>
 
         {error ? (

@@ -29,6 +29,12 @@ const api = {
   getSession: (): Promise<SessionUser | null> => ipcRenderer.invoke('auth:session'),
   changePassword: (currentPassword: string, newPassword: string): Promise<ChangePasswordResult> =>
     ipcRenderer.invoke('auth:changePassword', { currentPassword, newPassword }),
+  forgotPassword: (
+    username: string,
+    shopPhone: string,
+    newPassword: string
+  ): Promise<ChangePasswordResult> =>
+    ipcRenderer.invoke('auth:forgotPassword', { username, shopPhone, newPassword }),
   getAppContext: (): Promise<AppContext> => ipcRenderer.invoke('app:context'),
   factoryResetApp: (password: string, confirm: string): Promise<Result<string>> =>
     ipcRenderer.invoke('app:factoryReset', { password, confirm }),
